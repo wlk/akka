@@ -214,6 +214,7 @@ private[http] object JavaMapping {
   implicit object ContentDispositionType extends Inherited[jm.headers.ContentDispositionType, sm.headers.ContentDispositionType]
   implicit object EntityTag extends Inherited[jm.headers.EntityTag, sm.headers.EntityTag]
   implicit object EntityTagRange extends Inherited[jm.headers.EntityTagRange, sm.headers.EntityTagRange]
+  implicit object HSTSDirective extends Inherited[jm.headers.HSTSDirective, sm.headers.HSTSDirective]
   implicit object HttpChallenge extends Inherited[jm.headers.HttpChallenge, sm.headers.HttpChallenge]
   implicit object HttpCookie extends Inherited[jm.headers.HttpCookie, sm.headers.HttpCookie]
   implicit object HttpCookiePair extends Inherited[jm.headers.HttpCookiePair, sm.headers.HttpCookiePair]

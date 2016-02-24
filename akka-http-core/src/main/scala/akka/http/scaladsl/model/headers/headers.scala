@@ -330,6 +330,21 @@ final case class `Cache-Control`(directives: immutable.Seq[CacheDirective]) exte
   def getDirectives: Iterable[jm.headers.CacheDirective] = directives.asJava
 }
 
+object `Strict-Transport-Security` extends ModeledCompanion[`Strict-Transport-Security`] {
+  def apply(first: HSTSDirective, more: HSTSDirective*): `Strict-Transport-Security` = apply(immutable.Seq(first +: more: _*))
+  implicit val directivesRenderer = Renderer.defaultSeqRenderer[HSTSDirective]
+}
+final case class `Strict-Transport-Security`(directives: immutable.Seq[HSTSDirective]) extends jm.headers.HSTS
+  with RequestResponseHeader {
+  require(directives.nonEmpty, "directives must not be empty")
+  import `Strict-Transport-Security`.directivesRenderer
+  def renderValue[R <: Rendering](r: R): r.type = r ~~ directives
+  protected def companion = `Strict-Transport-Security`
+
+  /** Java API */
+  def getDirectives: Iterable[jm.headers.HSTSDirective] = directives.asJava
+}
+
 // http://tools.ietf.org/html/rfc7230#section-6.1
 object Connection extends ModeledCompanion[Connection] {
   def apply(first: String, more: String*): Connection = apply(immutable.Seq(first +: more: _*))
