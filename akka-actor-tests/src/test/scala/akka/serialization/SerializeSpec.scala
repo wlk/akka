@@ -420,12 +420,19 @@ class DefaultSerializationWarningSpec extends AkkaSpec(
   ConfigFactory.parseString("akka.actor.warn-about-java-serializer-usage = on")) {
 
   val ser = SerializationExtension(system)
+  val messagePrefix = "Using the default Java serializer for class.*"
 
   "Using the default Java serializer" must {
 
-    "log a warning" in {
-      EventFilter.warning(message = "Using the default Java serializer for class.*") intercept {
-        ser.serializerFor(classOf[java.lang.Integer])
+    "log a warning when serializing non-primitive Java class" in {
+      EventFilter.warning(message = messagePrefix) intercept {
+        ser.serializerFor(classOf[java.math.BigDecimal])
+      }
+    }
+
+    "not log warning when serializing Java String" in {
+      EventFilter.warning(message = messagePrefix, occurrences = 0) intercept {
+        ser.serializerFor(classOf[java.lang.String])
       }
     }
 
