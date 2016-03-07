@@ -246,10 +246,17 @@ class Serialization(val system: ExtendedActorSystem) extends Extension {
   val serializerByIdentity: Map[Int, Serializer] =
     Map(NullSerializer.identifier -> NullSerializer) ++ serializers map { case (_, v) ⇒ (v.identifier, v) }
 
-  private def shouldWarnAboutJavaSerializer(serializedClass: Class[_], serializer: Serializer) =
+  private def shouldWarnAboutJavaSerializer(serializedClass: Class[_], serializer: Serializer) = {
+    def isJavaPrimitive(packageName: String): Boolean = {
+      val primitives = List("java.lang.Boolean", "java.lang.Byte", "java.lang.Character", "java.lang.Double", "java.lang.Float", "java.lang.Integer", "java.lang.Long", "java.lang.Short", "java.lang.String")
+      primitives.contains(packageName)
+    }
+
     settings.config.getBoolean("akka.actor.warn-about-java-serializer-usage") &&
       serializer.isInstanceOf[JavaSerializer] &&
-      !serializedClass.getName.startsWith("akka.")
+      !serializedClass.getName.startsWith("akka.") &&
+      !isJavaPrimitive(serializedClass.getName)
+  }
 
 }
 
