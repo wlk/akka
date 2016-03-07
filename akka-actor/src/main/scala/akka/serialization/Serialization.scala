@@ -14,6 +14,7 @@ import scala.util.{ Try, DynamicVariable, Failure }
 import scala.collection.immutable
 import scala.util.control.NonFatal
 import scala.util.Success
+import akka.japi.Util.immutableSeq
 
 object Serialization {
 
@@ -30,12 +31,18 @@ object Serialization {
   private[akka] val currentTransportInformation = new DynamicVariable[Information](null)
 
   class Settings(val config: Config) {
+    import scala.collection.JavaConverters._
+
     val Serializers: Map[String, String] = configToMap("akka.actor.serializers")
     val SerializationBindings: Map[String, String] = configToMap("akka.actor.serialization-bindings")
+    val SilencedSerializationClasses: Set[String] = configToSet("akka.actor.silence-serialization-warnings-for")
 
     private final def configToMap(path: String): Map[String, String] = {
-      import scala.collection.JavaConverters._
       config.getConfig(path).root.unwrapped.asScala.toMap map { case (k, v) ⇒ (k -> v.toString) }
+    }
+
+    private final def configToSet(path: String): Set[String] = {
+      immutableSeq(config.getStringList(path)).toSet
     }
   }
 
@@ -247,15 +254,10 @@ class Serialization(val system: ExtendedActorSystem) extends Extension {
     Map(NullSerializer.identifier -> NullSerializer) ++ serializers map { case (_, v) ⇒ (v.identifier, v) }
 
   private def shouldWarnAboutJavaSerializer(serializedClass: Class[_], serializer: Serializer) = {
-    def isJavaPrimitive(packageName: String): Boolean = {
-      val primitives = List("java.lang.Boolean", "java.lang.Byte", "java.lang.Character", "java.lang.Double", "java.lang.Float", "java.lang.Integer", "java.lang.Long", "java.lang.Short", "java.lang.String")
-      primitives.contains(packageName)
-    }
-
     settings.config.getBoolean("akka.actor.warn-about-java-serializer-usage") &&
       serializer.isInstanceOf[JavaSerializer] &&
       !serializedClass.getName.startsWith("akka.") &&
-      !isJavaPrimitive(serializedClass.getName)
+      !settings.SilencedSerializationClasses.contains(serializedClass.getName)
   }
 
 }
